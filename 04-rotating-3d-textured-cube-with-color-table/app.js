@@ -44,7 +44,7 @@ var InitDemo = function () {
     // canvas.height = window.innerHeight;
     // gl.viewport(0,0, window.innerWidth, window.innerHeight);
 
-    gl.clearColor(0.25,0.25,0.25,1.0);
+    gl.clearColor(0.15,0.15,0.15,1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
     gl.enable(gl.DEPTH_TEST); // will perform a depth test on the raster for every pixel in the fragment
@@ -256,7 +256,7 @@ var InitDemo = function () {
         glMatrix.mat4.mul(worldMatrix, yRotationMatrix,xRotationMatrix);
         gl.uniformMatrix4fv(matWorldUniformLocation, gl.FALSE, worldMatrix);
 
-        gl.clearColor(0.25,0.25,0.25,1.0);
+        gl.clearColor(0.15,0.15,0.15,1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
         gl.activeTexture(gl.TEXTURE0);
