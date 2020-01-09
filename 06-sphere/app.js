@@ -98,7 +98,7 @@ var InitDemo = function () {
     //
     // CREATE BUFFER
     //
-    var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64, 0, Math.PI, Math.PI, 2 * Math.PI);
+    var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64/*, 0, Math.PI, Math.PI, 2 * Math.PI*/);
     var planeBuffer = twgl.primitives.createPlaneBufferInfo(gl,4,4);
 
     //
