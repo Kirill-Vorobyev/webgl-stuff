@@ -26,15 +26,25 @@ var fragmentShaderText =
 varying vec2 fragTexCoord;
 uniform sampler2D sunSampler;
 uniform sampler2D colorSampler;
+uniform bool planeShader;
 
 void main()
 {
   vec4 sunColor = texture2D(sunSampler, fragTexCoord);
-  gl_FragColor =  texture2D(colorSampler, sunColor.xx);
+  if(planeShader){
+    vec4 texColor =  texture2D(colorSampler, sunColor.xx);
+    if(sunColor.x == 1.0){
+        gl_FragColor = vec4(texColor.x,texColor.y,texColor.z,0.0);
+    }else{
+        gl_FragColor = vec4(texColor.x,texColor.y,texColor.z,texColor.w);
+    }
+    
+  }else{
+    gl_FragColor =  texture2D(colorSampler, sunColor.xx);
+  }
 }`
 
 var InitDemo = function () {
-    console.log("We're in InitDemo();");
     var canvas = document.getElementById("game-surface");
     var gl = canvas.getContext('webgl');
     if(!gl){
@@ -49,11 +59,13 @@ var InitDemo = function () {
     // canvas.width = window.innerWidth;
     // canvas.height = window.innerHeight;
     // gl.viewport(0,0, window.innerWidth, window.innerHeight);
-    var clearLuminance = 0.1;
+    var clearLuminance = 0.0;
     gl.clearColor(clearLuminance,clearLuminance,clearLuminance,1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
-    gl.enable(gl.DEPTH_TEST); // will perform a depth test on the raster for every pixel in the fragment
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.enable(gl.BLEND);
+    //gl.enable(gl.DEPTH_TEST); // will perform a depth test on the raster for every pixel in the fragment
     gl.enable(gl.CULL_FACE); // removes a face from being rastered
     gl.frontFace(gl.CCW); // counter clockwise ordering of vertices determiens the front face
     gl.cullFace(gl.BACK); // explicitly performs the cull on the back faces, can be used on the front
@@ -98,7 +110,7 @@ var InitDemo = function () {
     //
     // CREATE BUFFER
     //
-    var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64/*, 0, Math.PI, Math.PI, 2 * Math.PI*/);
+    var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64, 0, Math.PI, Math.PI, 2 * Math.PI);
     var planeBuffer = twgl.primitives.createPlaneBufferInfo(gl,4,4);
 
     //
@@ -132,7 +144,8 @@ var InitDemo = function () {
         mSdo: sdoViewMatrix,
         mPlane: identityMatrix,
         sunSampler: boxTexture,
-        colorSampler: colorTableTexture
+        colorSampler: colorTableTexture,
+        planeShader: false
     }
 
     uniformsPlane = {
@@ -142,21 +155,23 @@ var InitDemo = function () {
         mSdo: identityMatrix,
         mPlane: planeViewMatrix,
         sunSampler: boxTexture,
-        colorSampler: colorTableTexture
+        colorSampler: colorTableTexture,
+        planeShader: true
     }
 
     var xRotationMatrix = new Float32Array(16);
     var yRotationMatrix = new Float32Array(16);
 
-    var drawObjects = [];
+    var drawObjects1 = [];
+    var drawObjects2 = [];
 
-    drawObjects.push({
+    drawObjects1.push({
         programInfo: programInfo,
         bufferInfo: planeBuffer,
         uniforms: uniformsPlane
     });
 
-    drawObjects.push({
+    drawObjects2.push({
         programInfo: programInfo,
         bufferInfo: sphereBuffer,
         uniforms: uniformsSphere
@@ -166,7 +181,6 @@ var InitDemo = function () {
     //
     //Main Render Loop
     //
-    
     var angle = 0;
 
     var loop = function () {
@@ -182,8 +196,16 @@ var InitDemo = function () {
         gl.bindTexture(gl.TEXTURE_2D, boxTexture);
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, colorTableTexture);
+
         
-        twgl.drawObjectList(gl, drawObjects);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.enable(gl.BLEND);
+        gl.disable(gl.DEPTH_TEST);
+        twgl.drawObjectList(gl, drawObjects1);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+        gl.disable(gl.BLEND);
+        gl.enable(gl.DEPTH_TEST);
+        twgl.drawObjectList(gl, drawObjects2);
 
         requestAnimationFrame(loop);
     };
