@@ -49,7 +49,7 @@ var InitDemo = function () {
     // canvas.width = window.innerWidth;
     // canvas.height = window.innerHeight;
     // gl.viewport(0,0, window.innerWidth, window.innerHeight);
-    var clearLuminance = 0.0;
+    var clearLuminance = 0.1;
     gl.clearColor(clearLuminance,clearLuminance,clearLuminance,1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     
