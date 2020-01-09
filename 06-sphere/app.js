@@ -8,13 +8,14 @@ uniform mat4 mWorld;
 uniform mat4 mView;
 uniform mat4 mProj;
 uniform mat4 mSdo;
+uniform mat4 mPlane;
 
 void main()
 {
-  vec4 pos = mProj * mView * mWorld * vec4(position, 1.0);
-  vec4 texPos = mProj * mView * mSdo * vec4(position, 1.0);
+  vec4 pos = mProj * mView * mWorld * mPlane * vec4(position, 1.0);
+  vec4 texPos = mProj * mView * mSdo * mPlane * vec4(position, 1.0);
   gl_Position = pos;
-  float scale = 0.396;
+  float scale = 0.792;
   vec2 texPosOffset = vec2(texPos.x*scale + 0.5, texPos.y*scale + 0.5);
   fragTexCoord = texPosOffset.xy;
 }`
@@ -100,33 +101,48 @@ var InitDemo = function () {
     // CREATE BUFFER
     //
     var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64);
+    var planeBuffer = twgl.primitives.createPlaneBufferInfo(gl,4,4);
 
     //
     // CREATE VIEW MATRICES
     //
+    var identityMatrix = new Float32Array(16);
     var worldMatrix = new Float32Array(16);
     var viewMatrix = new Float32Array(16);
     var projMatrix = new Float32Array(16);
     var sdoViewMatrix = new Float32Array(16);
+    var planeViewMatrix = new Float32Array(16);
     glMatrix.mat4.identity(worldMatrix);
     glMatrix.mat4.lookAt(viewMatrix, [0,0,-7], [0,0,0], [0,1,0]);
-    glMatrix.mat4.ortho(projMatrix, -1.0, 1.0, -1.0, 1.0, 0.1, 1000.0);
+    glMatrix.mat4.ortho(projMatrix, -2.0, 2.0, -2.0, 2.0, 0.1, 1000.0);
 
     var sdoOffsetAngle = 45 * Math.PI/180;
     var sdoXRotationMatrix = new Float32Array(16);
     var sdoYRotationMatrix = new Float32Array(16);
-    var sdoIdentityMatrix = new Float32Array(16);
-    glMatrix.mat4.identity(sdoIdentityMatrix);
+    glMatrix.mat4.identity(identityMatrix);
     glMatrix.mat4.identity(sdoViewMatrix);
-    //glMatrix.mat4.rotate(sdoYRotationMatrix, sdoIdentityMatrix, sdoOffsetAngle, [0,1,0]);
-    //glMatrix.mat4.rotate(sdoXRotationMatrix, sdoIdentityMatrix, sdoOffsetAngle, [1,0,0]);
+    glMatrix.mat4.identity(planeViewMatrix);
+    //glMatrix.mat4.rotate(sdoYRotationMatrix, identityMatrix, sdoOffsetAngle, [0,1,0]);
+    //glMatrix.mat4.rotate(sdoXRotationMatrix, identityMatrix, sdoOffsetAngle, [1,0,0]);
     //glMatrix.mat4.mul(sdoViewMatrix, sdoYRotationMatrix,sdoXRotationMatrix);
+    glMatrix.mat4.rotate(planeViewMatrix, identityMatrix, degreesToRad(-90), [1,0,0]);
 
-    uniforms = {
+    uniformsSphere = {
         mWorld: worldMatrix,
         mView: viewMatrix,
         mProj: projMatrix,
         mSdo: sdoViewMatrix,
+        mPlane: identityMatrix,
+        sunSampler: boxTexture,
+        colorSampler: colorTableTexture
+    }
+
+    uniformsPlane = {
+        mWorld: worldMatrix,
+        mView: viewMatrix,
+        mProj: projMatrix,
+        mSdo: identityMatrix,
+        mPlane: planeViewMatrix,
         sunSampler: boxTexture,
         colorSampler: colorTableTexture
     }
@@ -134,19 +150,32 @@ var InitDemo = function () {
     var xRotationMatrix = new Float32Array(16);
     var yRotationMatrix = new Float32Array(16);
 
+    var drawObjects = [];
+
+    drawObjects.push({
+        programInfo: programInfo,
+        bufferInfo: planeBuffer,
+        uniforms: uniformsPlane
+    });
+
+    drawObjects.push({
+        programInfo: programInfo,
+        bufferInfo: sphereBuffer,
+        uniforms: uniformsSphere
+    })
+
+
     //
     //Main Render Loop
     //
     
-    var identityMatrix = new Float32Array(16);
-    glMatrix.mat4.identity(identityMatrix);
     var angle = 0;
 
     var loop = function () {
         angle = performance.now() / 1000 / 10 * 2 * Math.PI;
         glMatrix.mat4.rotate(yRotationMatrix, identityMatrix, angle / 2 , [0,1,0]);
         //glMatrix.mat4.rotate(xRotationMatrix, identityMatrix, angle / 2 , [1,0,0]);
-        glMatrix.mat4.mul(worldMatrix, yRotationMatrix,identityMatrix);
+        glMatrix.mat4.mul(worldMatrix, yRotationMatrix, identityMatrix);
 
         gl.clearColor(clearLuminance,clearLuminance,clearLuminance,1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -156,11 +185,7 @@ var InitDemo = function () {
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, colorTableTexture);
         
-        
-        gl.useProgram(programInfo.program);
-        twgl.setBuffersAndAttributes(gl, programInfo, sphereBuffer);
-        twgl.setUniforms(programInfo, uniforms);
-        gl.drawElements(gl.TRIANGLES, sphereBuffer.numElements, gl.UNSIGNED_SHORT, 0);
+        twgl.drawObjectList(gl, drawObjects);
 
         requestAnimationFrame(loop);
     };
@@ -168,3 +193,7 @@ var InitDemo = function () {
     requestAnimationFrame(loop);
     
 };
+
+function degreesToRad(deg){
+    return deg * Math.PI/180;
+}
