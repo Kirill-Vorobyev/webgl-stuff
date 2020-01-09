@@ -62,7 +62,6 @@ var InitDemo = function () {
     //
 
     var programInfo = twgl.createProgramInfo(gl, [vertexShaderText,fragmentShaderText]);
-    console.log(programInfo);
 
     //
     // Create Sun Texture
@@ -78,7 +77,6 @@ var InitDemo = function () {
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gl.LUMINANCE, gl.UNSIGNED_BYTE, document.getElementById("sun-171"));
 
     gl.bindTexture(gl.TEXTURE_2D, null);
-    console.log(boxTexture);
     //
     // Create Color Table Texture
     //
@@ -100,7 +98,7 @@ var InitDemo = function () {
     //
     // CREATE BUFFER
     //
-    var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64);
+    var sphereBuffer = twgl.primitives.createSphereBufferInfo(gl, 1, 128, 64, 0, Math.PI, Math.PI, 2 * Math.PI);
     var planeBuffer = twgl.primitives.createPlaneBufferInfo(gl,4,4);
 
     //
