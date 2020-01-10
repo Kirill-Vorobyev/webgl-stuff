@@ -203,7 +203,7 @@ var InitDemo = function () {
     var angleTick = 0.2;
     var maxAngle = 60;
 
-    var targetFps = 20;
+    var targetFps = 30;
     var frameCounter = 0;
     var frameCounterDOM = document.getElementById("frame-counter");
 
